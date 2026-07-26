@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Conversational AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            height: 90vh;
+            max-height: 800px;
+        }
+
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-meta {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.6;
+        }
+
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f9f9f9;
+            border-left: 1px solid #eee;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-card p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .badge.empathetic {
+            background: #f093fb;
+        }
+
+        .badge.curious {
+            background: #4facfe;
+        }
+
+        .badge.witty {
+            background: #43e97b;
+        }
+
+        .badge.supportive {
+            background: #fa709a;
+        }
+
+        .badge.playful {
+            background: #feca57;
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .stat {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .controls button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                max-height: 100%;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #eee;
+                padding: 15px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="header">
+                <h1>🤖 Mobile Conversational AI</h1>
+                <p>Experience next-gen conversational intelligence</p>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div class="input-section">
+                <input
+                    type="text"
+                    id="userInput"
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                />
+                <button id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="info-card">
+                <h3>Personality Mode</h3>
+                <p id="modeDisplay">Witty</p>
+                <div id="modeEmoji" style="font-size: 24px; margin-top: 8px;">🎯</div>
+            </div>
+
+            <div class="info-card">
+                <h3>Conversation Stats</h3>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="turnCount">0</div>
+                        <div class="stat-label">Turns</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="sarcasmCount">0</div>
+                        <div class="stat-label">Sarcasm</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Detection Status</h3>
+                <p id="detectionStatus" style="font-size: 13px; color: #666; margin-top: 8px;">Ready</p>
+                <div id="detectionBadge" style="margin-top: 8px;"></div>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetChat()" style="background: #999;">Reset</button>
+                <button onclick="showAnalysis()" style="background: #764ba2;">Analysis</button>
+            </div>
+
+            <div class="info-card hidden" id="analysisCard">
+                <h3>Failure Analysis</h3>
+                <pre id="analysisText" style="font-size: 11px; max-height: 150px; overflow: auto; white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationCount = 0;
+        let sarcasmDetections = 0;
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+            document.getElementById('sendBtn').disabled = true;
+
+            try {
+                // Send to backend
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) throw new Error('Failed to get response');
+
+                const data = await response.json();
+
+                // Add assistant response
+                addMessageToChat('assistant', data.response);
+
+                // Update UI
+                updatePersonalityMode(data.personality_mode);
+                updateStats(data.turn_count, data.sarcasm_detected);
+                updateDetectionStatus(data.personality_mode, data.sarcasm_detected);
+
+            } catch (error) {
+                addMessageToChat('assistant', 'Error: Could not process message. ' + error.message);
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('userInput').focus();
+            }
+        }
+
+        function addMessageToChat(sender, text) {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}`;
+
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            messageEl.innerHTML = `
+                <div class="message-content">${escapeHtml(text)}</div>
+                <div class="message-meta">${sender === 'user' ? 'You' : 'Assistant'} • ${time}</div>
+            `;
+
+            messagesDiv.appendChild(messageEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updatePersonalityMode(mode) {
+            const modeDisplay = document.getElementById('modeDisplay');
+            const modeEmoji = document.getElementById('modeEmoji');
+
+            const emojiMap = {
+                'witty': '🎯',
+                'empathetic': '💚',
+                'curious': '🔍',
+                'supportive': '🚀',
+                'playful': '🎉'
+            };
+
+            modeDisplay.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+            modeEmoji.textContent = emojiMap[mode] || '🤖';
+        }
+
+        function updateStats(turns, sarcasmDetected) {
+            document.getElementById('turnCount').textContent = turns;
+            if (sarcasmDetected) {
+                sarcasmDetections++;
+            }
+            document.getElementById('sarcasmCount').textContent = sarcasmDetections;
+        }
+
+        function updateDetectionStatus(mode, sarcasm) {
+            const badge = document.getElementById('detectionBadge');
+            badge.className = `badge ${mode}`;
+            badge.textContent = sarcasm ? '🎭 Sarcasm Detected' : `✓ ${mode}`;
+
+            const status = document.getElementById('detectionStatus');
+            if (sarcasm) {
+                status.textContent = 'Sarcasm mode activated - context reframed';
+                status.style.color = '#f093fb';
+            } else {
+                status.textContent = `Personality: ${mode}`;
+                status.style.color = '#666';
+            }
+        }
+
+        async function resetChat() {
+            if (confirm('Reset conversation?')) {
+                await fetch('/api/reset', { method: 'POST' });
+                document.getElementById('messages').innerHTML = '';
+                document.getElementById('turnCount').textContent = '0';
+                sarcasmDetections = 0;
+                document.getElementById('sarcasmCount').textContent = '0';
+                updatePersonalityMode('witty');
+                updateDetectionStatus('witty', false);
+                document.getElementById('userInput').focus();
+                addMessageToChat('assistant', 'Conversation reset. Ready to chat again! 👋');
+            }
+        }
+
+        async function showAnalysis() {
+            const analysisCard = document.getElementById('analysisCard');
+            if (analysisCard.classList.contains('hidden')) {
+                try {
+                    const response = await fetch('/api/analysis');
+                    const data = await response.json();
+                    document.getElementById('analysisText').textContent = data.analysis;
+                    analysisCard.classList.remove('hidden');
+                } catch (error) {
+                    alert('Error loading analysis');
+                }
+            } else {
+                analysisCard.classList.add('hidden');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to send
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initial message
+        window.addEventListener('load', () => {
+            addMessageToChat('assistant', 'Hello! I\'m your next-gen conversational AI. I\'ve got 5 personality modes, persistent memory, and I can detect sarcasm. Try talking to me!');
+            document.getElementById('userInput').focus();
+        });
+    </script>
+</body>
+</html>

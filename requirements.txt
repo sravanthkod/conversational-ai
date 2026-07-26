@@ -1,9 +1,12 @@
+# Web Framework
+Flask>=2.3.0
+gunicorn>=21.0.0
+
 # Core dependencies
 requests>=2.31.0
 numpy>=1.24.0
-pyaudio>=0.2.13
 
-# For local LLM (Ollama)
+# For local LLM (Ollama) - optional
 ollama>=0.0.14
 
 # Data & state management
@@ -13,6 +16,9 @@ pydantic>=2.0.0
 # Utilities
 python-dotenv>=1.0.0
 pyyaml>=6.0
+
+# Audio processing (optional, uses mock in Colab)
+pyaudio>=0.2.13
 
 # Optional: For better async handling
 aiofiles>=23.0.0
