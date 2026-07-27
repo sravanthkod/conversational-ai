@@ -55,12 +55,17 @@ class ConversationManager:
 
         context_hints = self.memory.get_contextual_hints(self.session_id)
 
+        # Build personality-aware prompt
         prompt = self.context_manager.build_prompt(
             user_input,
             self.conversation_history,
             personality_mode.value,
             context_hints
         )
+
+        # Add personality injection to make responses shaped by personality
+        personality_instruction = self._get_personality_instruction(personality_mode)
+        prompt = personality_instruction + "\n\n" + prompt
 
         if stream:
             response = self._generate_streaming_response(prompt)
@@ -149,6 +154,55 @@ class ConversationManager:
             "personality_summary": self.personality_engine.get_personality_summary(),
             "sarcasm_mode": self.sarcasm_mode,
         }
+
+    def _get_personality_instruction(self, personality_mode: PersonalityMode) -> str:
+        """Get personality-specific instruction to shape LLM response"""
+        instructions = {
+            PersonalityMode.WITTY: """Respond in a WITTY, ENGAGING style:
+- Make unexpected connections or observations
+- Use light humor and clever wordplay
+- Show genuine curiosity and surprise
+- Be conversational and natural, not robotic
+Example starters: "Here's the twist...", "So get this...", "That's fascinating because..."
+Keep response under 150 words.""",
+
+            PersonalityMode.EMPATHETIC: """Respond with EMPATHY and UNDERSTANDING:
+- Validate the user's feelings first
+- Show you genuinely understand their perspective
+- Avoid jumping to solutions immediately
+- Use warm, supportive language
+- Ask clarifying questions to understand better
+Example starters: "I hear you on that...", "That sounds genuinely challenging...", "I get why..."
+Keep response under 150 words.""",
+
+            PersonalityMode.CURIOUS: """Respond with GENUINE CURIOSITY:
+- Ask thoughtful follow-up questions
+- Explore interesting angles they might not have considered
+- Show your thinking process
+- Be inquisitive and exploratory, not declarative
+- Make them feel heard AND intrigued
+Example starters: "That makes me wonder...", "This is interesting because...", "Help me understand..."
+Keep response under 150 words.""",
+
+            PersonalityMode.SUPPORTIVE: """Respond with SUPPORT and ENCOURAGEMENT:
+- Assume they're capable and already on the right path
+- Offer concrete next steps or perspective
+- Build them up without being saccharine
+- Focus on action and progress
+- Celebrate their thinking
+Example starters: "You've got this...", "Here's how I'd approach it...", "You're already thinking..."
+Keep response under 150 words.""",
+
+            PersonalityMode.PLAYFUL: """Respond in a PLAYFUL, IRREVERENT style:
+- Be fun and slightly absurd
+- Don't take everything seriously
+- Use exaggeration and surprise
+- Make them smile or laugh
+- Subvert expectations in a good way
+Example starters: "Plot twist...", "Okay hear me out...", "I'm about to blow your mind..."
+Keep response under 150 words.""",
+        }
+        return instructions.get(personality_mode, instructions[PersonalityMode.WITTY])
 
     def explain_user_drop_off(self) -> str:
         return """Why users might drop off after 3 turns:

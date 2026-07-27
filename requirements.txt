@@ -6,8 +6,8 @@ gunicorn>=21.0.0
 requests>=2.31.0
 numpy>=1.24.0
 
-# For local LLM (Ollama) - optional
-ollama>=0.0.14
+# For local LLM (Ollama) - REQUIRED for real responses
+ollama>=0.1.0
 
 # Data & state management
 sqlalchemy>=2.0.0

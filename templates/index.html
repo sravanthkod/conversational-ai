@@ -156,6 +156,33 @@
             cursor: not-allowed;
         }
 
+        #micBtn {
+            padding: 12px 20px;
+            background: #667eea;
+            font-size: 16px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #micBtn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        #voiceStatus {
+            animation: pulse 1s infinite;
+            border-top: 1px solid #ddd;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         .sidebar {
             width: 280px;
             background: #f9f9f9;
@@ -313,10 +340,16 @@
                 <input
                     type="text"
                     id="userInput"
-                    placeholder="Type your message..."
+                    placeholder="Type your message or click 🎤..."
                     autocomplete="off"
                 />
+                <button id="micBtn" onclick="toggleVoiceInput()" title="Click to speak">🎤</button>
                 <button id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+
+            <!-- Voice Status Indicator -->
+            <div id="voiceStatus" style="display: none; padding: 10px; text-align: center; background: #f0f0f0; font-size: 12px; color: #666;">
+                <span id="voiceStatusText">Listening...</span>
             </div>
         </div>
 
@@ -362,6 +395,95 @@
     <script>
         let conversationCount = 0;
         let sarcasmDetections = 0;
+        let voiceRecognition = null;
+        let isListening = false;
+
+        // Initialize Web Speech API (ASR - Automatic Speech Recognition)
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Speech Recognition not supported in this browser');
+                return false;
+            }
+
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.continuous = false;
+            voiceRecognition.interimResults = false;
+            voiceRecognition.lang = 'en-US';
+
+            voiceRecognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voiceStatus').style.display = 'block';
+                document.getElementById('voiceStatusText').textContent = '🎤 Listening...';
+                document.getElementById('micBtn').style.background = '#f093fb';
+            };
+
+            voiceRecognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('userInput').value = transcript;
+                sendMessage();
+            };
+
+            voiceRecognition.onerror = (event) => {
+                console.log('Speech recognition error:', event.error);
+                document.getElementById('voiceStatusText').textContent = '❌ Error: ' + event.error;
+                document.getElementById('micBtn').style.background = '#667eea';
+            };
+
+            voiceRecognition.onend = () => {
+                isListening = false;
+                document.getElementById('voiceStatus').style.display = 'none';
+                document.getElementById('micBtn').style.background = '#667eea';
+            };
+
+            return true;
+        }
+
+        // Toggle voice input
+        function toggleVoiceInput() {
+            if (!voiceRecognition) {
+                if (!initVoiceRecognition()) return;
+            }
+
+            if (isListening) {
+                voiceRecognition.stop();
+            } else {
+                document.getElementById('userInput').value = '';
+                voiceRecognition.start();
+            }
+        }
+
+        // Text-to-Speech (TTS - converts AI response to audio)
+        function playAssistantVoice(text) {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                utterance.lang = 'en-US';
+
+                // Try to use a natural voice
+                const voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    utterance.voice = voices[0];
+                }
+
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Load voices when available
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                speechSynthesis.getVoices();
+            };
+        }
 
         async function sendMessage() {
             const input = document.getElementById('userInput');
@@ -390,6 +512,9 @@
 
                 // Add assistant response
                 addMessageToChat('assistant', data.response);
+
+                // Play assistant voice (TTS)
+                playAssistantVoice(data.response);
 
                 // Update UI
                 updatePersonalityMode(data.personality_mode);

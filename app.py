@@ -10,19 +10,54 @@ app = Flask(__name__)
 
 # Global conversation manager
 manager = None
+llm_provider = None
+ollama_available = False
+
+
+def init_llm_provider():
+    """Initialize LLM provider - try Ollama first, fall back to mock"""
+    global llm_provider, ollama_available
+
+    if llm_provider is not None:
+        return llm_provider
+
+    # Try to connect to Ollama
+    try:
+        # ollama = OllamaProvider(model="mistral")
+        ollama = OllamaProvider(model="tinyllama")
+        if ollama.is_available():
+            # print("✓ Connected to Ollama (mistral)")
+            print("✓ Connected to Ollama (tinyllama)")
+            ollama_available = True
+            llm_provider = ollama
+            return llm_provider
+    except Exception as e:
+        print(f"⚠ Ollama not available: {e}")
+
+    # Fall back to mock
+    print("ℹ Using mock LLM. To use real responses, install Ollama:")
+    print("  1. Download from https://ollama.ai")
+    print("  2. Run: ollama serve")
+    print("  3. In another terminal: ollama pull mistral")
+    print("  4. Restart this app")
+
+    ollama_available = False
+    llm_provider = MockLLMProvider()
+    return llm_provider
+
 
 class MockLLMProvider:
-    """Mock LLM for demo - responds without needing Ollama"""
+    """Fallback mock LLM - used if Ollama isn't available"""
     def __init__(self):
         self.responses = [
-            "That's a great question! Here's what I think: the key is finding what genuinely engages you, then doubling down. What specifically draws you in?",
-            "Oh man, this is the million-dollar question. I think the best jokes work because they subvert expectations at the exact right moment. Timing + surprise = laughter.",
-            "Someone once asked me if I dream in binary. I said no, but if I did, my dreams would probably be aggressively linear. Not my best work.",
-            "That's a fascinating perspective. I hadn't thought of it that way before.",
-            "Okay wait—so you're telling me EVERYTHING up to now was sarcasm? That's actually brilliant. Let me reframe everything with that context. You've just played the conversational equivalent of 'plot twist,' and I respect that.",
-            "Here's the thing about that: it's more nuanced than it first appears.",
-            "I really hear you on that. That sounds genuinely challenging.",
-            "That's interesting because it suggests something deeper is going on.",
+            "That's a great question! Here's what I think: the key is finding what genuinely engages you. What specifically draws you in?",
+            "This is the million-dollar question. I think the best ideas work because they connect unexpected dots at just the right moment.",
+            "Someone once asked me something similar. The answer surprised me because it revealed something deeper.",
+            "That's a fascinating perspective. I hadn't considered it from that angle.",
+            "Okay wait—so you're telling me EVERYTHING was sarcasm? That's brilliant! Let me reframe this entire thing with that context.",
+            "Here's the nuance: it's more complex than it first appears.",
+            "I genuinely hear you on that. That sounds legitimately challenging.",
+            "That's interesting because it suggests something important is happening.",
         ]
         self.call_count = 0
 
@@ -39,10 +74,11 @@ class MockLLMProvider:
 
 
 def init_manager():
-    """Initialize conversation manager with mock LLM"""
+    """Initialize conversation manager with real or mock LLM"""
     global manager
     if manager is None:
-        manager = ConversationManager(llm_provider=MockLLMProvider())
+        llm = init_llm_provider()
+        manager = ConversationManager(llm_provider=llm)
     return manager
 
 

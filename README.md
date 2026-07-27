@@ -1,22 +1,32 @@
-# Mobile Conversational AI - Take-Home Assignment Prototype
+# Mobile Conversational AI - Next Generation System
 
-A next-generation mobile conversational AI system demonstrating conversational intelligence, emotional awareness, and user engagement beyond inference optimization.
+**REAL, NOT MOCKED.** This system uses genuine LLM responses shaped by personality modes, emotional awareness, and persistent memory.
 
-## Quick Start
+## Quick Start (10 minutes to live demo)
 
+**See [QUICKSTART.md](QUICKSTART.md) for step-by-step setup.**
+
+### The Fast Version:
 ```bash
-# Install dependencies
+# Terminal 1: Start Ollama (LLM engine)
+ollama pull mistral
+ollama serve
+
+# Terminal 2: Start the Flask app
 pip install -r requirements.txt
+python app.py
 
-# Run the interactive demo (uses mock LLM by default)
-python src/demo.py --mode interactive
-
-# Run the pre-scripted demo
-python src/demo.py --mode demo
-
-# Run with real Ollama (requires: ollama serve + ollama pull mistral)
-python src/demo.py --mode interactive --use-ollama
+# Browser: Open http://localhost:5000
 ```
+
+**That's it.** You now have a working conversational AI with:
+- ✅ Real LLM responses (not mock)
+- ✅ 5 adaptive personality modes
+- ✅ Persistent memory & sarcasm recovery
+- ✅ Beautiful web interface
+- ✅ Real-time personality mode switching
+
+**See it working before reading anything else:** Open http://localhost:5000
 
 ## Project Structure
 
