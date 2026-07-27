@@ -7,14 +7,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from conversation_manager import ConversationManager
 from llm_interface import OllamaProvider
+from voice_input import VoiceInputHandler
 
 
 class DemoRunner:
-    def __init__(self, use_mock: bool = True):
+    def __init__(self, use_mock: bool = True, use_voice: bool = False):
         self.use_mock = use_mock
+        self.use_voice = use_voice
+        self.voice_handler = VoiceInputHandler() if use_voice else None
 
         if not use_mock:
-            llm = OllamaProvider(model="mistral")
+            # llm = OllamaProvider(model="mistral")
+            # llm = OllamaProvider(model="tinyllama")
+            llm = OllamaProvider(model="phi")
             if not llm.is_available():
                 print("Error: Ollama not available. Run 'ollama serve' or use --mock flag")
                 sys.exit(1)
@@ -28,19 +33,49 @@ class DemoRunner:
         print("Mobile Conversational AI - Interactive Demo")
         print("="*60)
         print("\nYou're chatting with an AI designed to be genuinely engaging.")
-        print("Type 'exit' to quit, 'summary' to see conversation stats,")
-        print("'analysis' to see drop-off analysis.\n")
+
+        if self.use_voice:
+            print("🎤 Voice mode enabled - speak to the microphone")
+            print("Type 'exit' to quit, 'text' to switch to text mode,")
+            print("'summary' to see conversation stats, 'analysis' for drop-off analysis.\n")
+        else:
+            print("Type 'exit' to quit, 'voice' to enable voice input,")
+            print("'summary' to see conversation stats, 'analysis' for drop-off analysis.\n")
 
         while True:
             try:
-                user_input = input("You: ").strip()
+                # Get input from voice or text
+                if self.use_voice:
+                    user_input = self.voice_handler.capture_voice_input()
+                    if not user_input:
+                        continue
+                else:
+                    user_input = input("You: ").strip()
+                    if not user_input:
+                        continue
 
-                if not user_input:
-                    continue
-
+                # Handle commands
                 if user_input.lower() == "exit":
                     print("\nThanks for chatting!")
                     break
+
+                if user_input.lower() == "voice":
+                    if not self.use_voice:
+                        try:
+                            self.use_voice = True
+                            self.voice_handler = VoiceInputHandler()
+                            print("\n🎤 Voice mode enabled! Speak to continue.\n")
+                        except Exception as e:
+                            print(f"\n❌ Voice mode failed: {e}\n")
+                            print("Install requirements: pip install SpeechRecognition pyaudio\n")
+                            self.use_voice = False
+                    continue
+
+                if user_input.lower() == "text":
+                    if self.use_voice:
+                        self.use_voice = False
+                        print("\n📝 Switched to text mode\n")
+                    continue
 
                 if user_input.lower() == "summary":
                     self._print_summary()
@@ -124,10 +159,12 @@ def main():
                        help="Run mode: interactive or demo")
     parser.add_argument("--use-ollama", action="store_true",
                        help="Use real Ollama instead of mock LLM")
+    parser.add_argument("--voice", action="store_true",
+                       help="Enable voice input from microphone (requires SpeechRecognition + pyaudio)")
 
     args = parser.parse_args()
 
-    runner = DemoRunner(use_mock=not args.use_ollama)
+    runner = DemoRunner(use_mock=not args.use_ollama, use_voice=args.voice)
 
     if args.mode == "demo":
         runner.run_demo_conversation()

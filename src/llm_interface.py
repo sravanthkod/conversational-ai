@@ -30,26 +30,50 @@ class OllamaProvider(LLMProvider):
         except:
             return False
 
-    def generate(self, prompt: str, context: Optional[str] = None,
-                max_tokens: int = 256, temperature: float = 0.7) -> str:
-        full_prompt = f"{context}\n\n{prompt}" if context else prompt
+    # def generate(self, prompt: str, context: Optional[str] = None,
+    #             max_tokens: int = 256, temperature: float = 0.7) -> str:
+    #     full_prompt = f"{context}\n\n{prompt}" if context else prompt
 
+    #     payload = {
+    #         "model": self.model,
+    #         "prompt": full_prompt,
+    #         "stream": False,
+    #         "temperature": temperature,
+    #         "num_predict": max_tokens,
+    #     }
+
+    #     try:
+    #         response = requests.post(self.endpoint, json=payload, timeout=30)
+    #         if response.status_code == 200:
+    #             return response.json().get("response", "").strip()
+    #     except requests.exceptions.RequestException as e:
+    #         return f"Error generating response: {str(e)}"
+
+    #     return ""
+
+    def generate(self, prompt: str, context: Optional[str] = None,
+            max_tokens: int = 256, temperature: float = 0.7) -> str:
+    
+    # SIMPLIFY: Don't include context in request
         payload = {
             "model": self.model,
-            "prompt": full_prompt,
+            "prompt": prompt,  # Just the prompt, no context
             "stream": False,
-            "temperature": temperature,
-            "num_predict": max_tokens,
+            "temperature": 0.5,  # Lower temperature
+            "num_predict": 100,  # Smaller response
+            "top_k": 40,
+            "top_p": 0.9,
         }
-
+        
         try:
-            response = requests.post(self.endpoint, json=payload, timeout=30)
+            response = requests.post(self.endpoint, json=payload, timeout=60)
             if response.status_code == 200:
                 return response.json().get("response", "").strip()
         except requests.exceptions.RequestException as e:
-            return f"Error generating response: {str(e)}"
-
+            return f"Error: {str(e)}"
+        
         return ""
+
 
     def stream_generate(self, prompt: str, context: Optional[str] = None,
                        max_tokens: int = 256, temperature: float = 0.7) -> Iterator[str]:

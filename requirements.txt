@@ -17,8 +17,9 @@ pydantic>=2.0.0
 python-dotenv>=1.0.0
 pyyaml>=6.0
 
-# Audio processing (optional, uses mock in Colab)
+# Audio & Speech Recognition
 pyaudio>=0.2.13
+SpeechRecognition>=3.10.0
 
 # Optional: For better async handling
 aiofiles>=23.0.0
