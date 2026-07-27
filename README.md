@@ -450,7 +450,3 @@ See `ARCHITECTURE.md` for deep dives into:
 - Edge deployment constraints
 
 ---
-
-**Built as a response to Cerence's Scientist Take-Home Assignment.**
-
-Focuses on: system design, conversational intelligence, and product thinking beyond inference optimization.
